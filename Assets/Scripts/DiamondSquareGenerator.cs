@@ -2,8 +2,7 @@
 using System.Collections;
 
 public class DiamondSquareGenerator : MonoBehaviour {
-	public float diamondSquareDelta = 5f;
-	public float diamondSquareBlend = 100f;
+	public float diamondSquareDelta = 0.5f;
 	public PointLight pointLight;
 	public GameObject waterPlane;
 	public int seed = 12345;
@@ -12,7 +11,6 @@ public class DiamondSquareGenerator : MonoBehaviour {
 	private float maxHeight;
 	private float minHeight;
 
-	// Use this for initialization
 	void Start () {
 		terrain = (Terrain) GetComponent(typeof(Terrain));
 		if (terrain == null) {
@@ -32,17 +30,22 @@ public class DiamondSquareGenerator : MonoBehaviour {
 	}
 	public void generateTerrain() {
 		TerrainData terrainData = terrain.terrainData;
-		assignHeights (terrainData);
-		calculateMaxMinHeight (terrainData);
+		// calculate and assign height for terrain
+		assignHeights (terrainData);	
+		// get max and min height for the terrain for colouring
+		calculateMaxMinHeight (terrainData);	
+		// change height of water according to terrain heights
 		float waterPlaneHeight = minHeight + ((maxHeight - minHeight) / 2.0f);
 		waterPlane.transform.position = new Vector3 (waterPlane.transform.position.x, waterPlaneHeight, waterPlane.transform.position.z);
+		// add texture for the terrain
 		assignSplatMap (terrainData);
 	}
 
 	private void calculateMaxMinHeight(TerrainData terrainData) {
+		// loop through all xy coordinates and record max and min alphamapheights
 		for (int y = 0; y < terrainData.alphamapHeight; y++) {
 			for (int x = 0; x < terrainData.alphamapWidth; x++) {
-				// Normalise x/y coordinates to range 0-1 
+				// Normalise xy coordinates to range 0-1 
 				float yNormalized = (float)y / (float)terrainData.alphamapHeight;
 				float xNormalized = (float)x / (float)terrainData.alphamapWidth;
 
@@ -61,17 +64,15 @@ public class DiamondSquareGenerator : MonoBehaviour {
 
 	private void assignSplatMap(TerrainData terrainData) {
 
-		// Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
+		// Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for custom splatmap data:
 		float[, ,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
-		for (int y = 0; y < terrainData.alphamapHeight; y++)
-		{
-			for (int x = 0; x < terrainData.alphamapWidth; x++)
-			{
-				// Normalise x/y coordinates to range 0-1 
+		for (int y = 0; y < terrainData.alphamapHeight; y++) {
+			for (int x = 0; x < terrainData.alphamapWidth; x++) {
+				// Normalise xy coordinates to range 0-1 
 				float yNormalized = (float)y/(float)terrainData.alphamapHeight;
 				float xNormalized = (float)x/(float)terrainData.alphamapWidth;
 
-				// Sample the height at this location (note GetHeight expects int coordinates corresponding to locations in the heightmap array)
+				// Sample the height at this location
 				float height = terrainData.GetHeight(Mathf.RoundToInt(yNormalized * terrainData.heightmapHeight),Mathf.RoundToInt(xNormalized * terrainData.heightmapWidth) );
 
 				// Setup an array to record the mix of texture weights at this point
@@ -82,22 +83,29 @@ public class DiamondSquareGenerator : MonoBehaviour {
 
 				float heightRange = maxHeight - minHeight;
 				float iceRangeMin = maxHeight - heightRange * 0.25f;
-				float mudRangeMin = iceRangeMin - heightRange * 0.25f;
+				float mudRangeMin = iceRangeMin - heightRange * 0.15f;
 				float grassRangeMin = minHeight;
 
+				// assign different texture according to height range
+
+				// splatWeights[2] = ice texture
 				if (height >= iceRangeMin - randomBoundHeight) {
-					splatWeights[2] = 1f;
+					splatWeights[2] = height; // weight of the texture accrording to height
+											  // colour is stronger at high ground
 				}
 
+				// splatWeights[1] = mud texture
+				// mixture of all three textures (ice/mud/grass)
+				// appl randomBoundHeight so a mix of texture in between minimum bounds
 				if (height < (iceRangeMin + randomBoundHeight) && height >= mudRangeMin) {
-					splatWeights[randomTexture] = 10f;
+					splatWeights[randomTexture] = height;
 				}
 
+				// splatWeights[0] = grass texture
 				if (height < (mudRangeMin + randomBoundHeight) && height >= grassRangeMin) {
-					splatWeights[0] = 1f;
+					splatWeights[0] = height;
 				}
-
-			
+					
 				// Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
 				float z = splatWeights[0] + splatWeights[1] + splatWeights[2];
 
@@ -112,11 +120,10 @@ public class DiamondSquareGenerator : MonoBehaviour {
 				}
 			}
 		}
-		// Finally assign the new splatmap to the terrainData:
+		// Assign the new splatmap to the terrainData:
 		terrainData.SetAlphamaps(0, 0, splatmapData);
 	}
 
-	
 
 	private void assignHeights(TerrainData terrainData) {
 		int terrainWidth = terrainData.heightmapWidth;
@@ -125,10 +132,10 @@ public class DiamondSquareGenerator : MonoBehaviour {
 		float[,] heightMap = terrainData.GetHeights(0, 0, terrainWidth, terrainHeight);
 		float[,] generatedHeightMap = (float[,]) heightMap.Clone();
 
-		// Set the number of iterations and pass the height array to the appropriate generator script...
+		// use diamond square algorithm to produce heightmap
 		generatedHeightMap = generateDiamondSquare(generatedHeightMap, new Vector2(terrainWidth, terrainHeight));
 
-		// Apply it to the terrain object...
+		// Apply it to the terrain object
 		for (int y = 0; y < terrainHeight; y++) {
 			for (int x = 0; x < terrainWidth; x++) {
 				float newHeightAtPoint = generatedHeightMap[x, y];
@@ -192,6 +199,7 @@ public class DiamondSquareGenerator : MonoBehaviour {
 					dsCalculateHeight(heightMap, arraySize, x, nextY, points2, heightRange);
 				}
 			}
+			// normalize with the delta to create different height differences
 			heightRange *= diamondSquareDelta;
 			step = halfStep;
 		}

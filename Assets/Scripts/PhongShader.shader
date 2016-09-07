@@ -67,7 +67,7 @@ Shader "Unlit/PhongShader"
 				float Ka = 1;
 				float3 amb = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * Ka;
 
-				// Calculate diffuse RBG reflections, we save the results of L.N because we will use it again
+				// Calculate diffuse RBG reflections
 				// (when calculating the reflected ray in our specular component)
 				float fAtt = 1;
 				float Kd = 1;
@@ -85,6 +85,7 @@ Shader "Unlit/PhongShader"
 
 				// Combine Phong illumination model components
 				float4 finalColor = float4(amb.rgb + dif.rgb + spe.rgb, 1.0);
+				// Blend texture and colour together
 				fixed4 col = (tex2D(_MainTex, v.uv) * _BlendFct + finalColor * _BlendFct);
 				return col;
 			}
