@@ -72,19 +72,19 @@ Shader "Unlit/PhongShader"
 				float fAtt = 1;
 				float Kd = 1;
 				float3 L = normalize(_PointLightPosition - worldVertex.xyz);
-				float LdotN = dot(L, worldNormal.xyz);
+				float LdotN = dot(L, normalize(worldNormal));
 				float3 dif = fAtt * _PointLightColor.rgb * Kd * v.color.rgb * saturate(LdotN);
 				
 				// Calculate specular reflections
 				float Ks = 1;
-				float specN = 5; // Values>>1 give tighter highlights
+				float specN = 25; // Values>>1 give tighter highlights
 				float3 V = normalize(_WorldSpaceCameraPos - worldVertex.xyz);
-				float3 R = reflect(-L, worldNormal.xyz);
+				float3 R = reflect(-L, normalize(worldNormal));
 				float3 RdotV = dot(R, V);
 				float3 spe = fAtt * _PointLightColor.rgb * Ks * pow(saturate(RdotV), specN);
 
 				// Combine Phong illumination model components
-				float4 finalColor = float4(amb.rgb + dif.rgb + spe.rgb, 1.0);
+				float4 finalColor = float4(amb.rgb + dif.rgb + spe.rgb, v.color.a);
 				// Blend texture and colour together
 				fixed4 col = (tex2D(_MainTex, v.uv) * _BlendFct + finalColor * _BlendFct);
 				return col;
