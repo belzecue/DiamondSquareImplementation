@@ -1,6 +1,34 @@
 # Diamond Square Implementation
 
-## Implementation:
+In this project, I implemented the Diamond-Square algorithm, which is a de-facto standard in fractal landscape generation, using Unity and C#. The fractal will generate a heightmap which can then be used to construct the 3D landscape geometry. The algorithm will automatically generate a randomly seeded fractal landscape at each invocation of the program, via a correct implementation of the diamond-square algorithm.
+
+## Requirements
+
+### Modelling of fractal landscape
+– You must automatically generate a randomly seeded fractal landscape at each invocation of the program, via a correct implementation of the diamond-square algorithm.
+– You must use Unity’s architecture appropriately to generate and render the landscape.
+– There must be no notable problems or artifacts with the polygonal representation.
+### Camera motion
+– You must allow for movement of the camera, including rotation and translation using the mouse and keyboard keys.
+– Your camera controls should be implemented in a ’flight simulator’ style, with the following specifications:
+∗ Moving the mouse should control the relative pitch and yaw of the camera
+∗ The ’w’ and ’s’ keys should cause the camera to move forwards and backwards re-
+spectively, relative the the camera’s current orientation
+∗ The ’a’ and ’d’ keys should cause the camera to move left and right respectively, relative to the camera’s current orientation
+∗ The ’q’ and ’e’ keys should control the roll of the camera
+– You must allow the user to move anywhere in the world (including up into the sky), and
+prohibit the user from moving ”underground” or outside the bounds of the landscape.
+– The camera must not become ’stuck’ upon nearing or impacting the terrain, i.e. reversing and continuing to move must always be possible.
+– You must utilise perspective projection, and choose a suitable default perspective, so that the landscape is clearly visible from the start.
+### Surface properties
+– The colour of the terrain must correspond in a sensible way with the height of the terrain at any particular point (for example rocky outcrops or snow on top of mountains and grass or soil in valleys).
+– Suitable lighting must be present based on the Phong illumination model (diffuse, specular and ambient components). You should use a custom Cg/HLSL shader for this.
+– The direction of the lighting must change with time, to simulate the effect of a sun rising and setting.
+– The sun itself must also be drawn, in order to help verify the correctness of your lighting implementation. You may use any simple geometric shape such as a pyramid, cube or sphere to represent the sun.
+– Your landscape must include semi-transparent water sections, which may be rendered as a plane through parts of the landscape.
+– A constant and reasonable frame refresh rate must be maintained during program execu- tion (i.e., more than 30 frames per second)
+
+## Implementation Overview
 
 ### Terrain generation
 Firstly I instantiate a unity standard terrain object in my scene, then I process and change the terrainData using diamond square algorithm. So for every xy coordinates of the terrain I calculate a new height using diamond square. Each iteration I execute 2 nested loop, 1 for diamond and 1 for square. I keep halving the step by 2 for the entire width of the terrain; and using the step and halfstep we can calculate the average height for the coordinates for squares and diamonds. Multiply the height range with a random value to create variations.
